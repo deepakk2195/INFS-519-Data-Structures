@@ -1,0 +1,305 @@
+/*
+Name - Anju Kuruvilla
+Date - 11/2/2017
+INFS-519 Assignment 3
+G# - G#01099573
+*/
+
+import java.io.*;
+import java.util.*;
+import java.lang.*;
+
+class Node
+	{
+		int val, height;
+		Node lchild, rchild;
+	
+		public Node(int item){
+			val = item;
+			height = 1;
+			lchild = rchild = null;
+		}
+	}
+	
+class binaryTreeFunctions{
+
+	Node root; //Root of BST
+	
+	//Constructor 
+	binaryTreeFunctions()
+	{
+		root = null;
+	}
+	
+	//Method to search for an item, returns whether it found the item or not
+	boolean search_F(int key)
+	{
+		return searchElementInTree(key, root);
+	}
+	
+	//Recursive method for searching as part of the search_F method
+	boolean searchElementInTree (int key, Node root)
+	{
+		boolean valFound = false;
+		
+		if(root == null)
+			valFound = false;
+
+		else if(root.val == key)
+		   valFound = true;
+		
+		else
+		{
+			if(key < root.val)
+				root = root.lchild;
+			else if(key > root.val)
+				root = root.rchild;
+			
+			valFound = searchElementInTree(key, root);
+		}
+		return valFound;
+	}
+	
+	//Method to reset the tree to being empty
+	public void reset_E()
+	{
+		root = null;
+	}
+	
+	//Method to insert an element in the tree
+	public void insert_I(int key)
+	{
+		if(!search_F(key))
+		{
+			root = insertElementInTree(root, key);
+		}
+	}
+	
+	//Recursive method for inserting items as part of the insert_I method
+	Node insertElementInTree(Node root, int key)
+	{
+		//If the tree is empty, set the new root element
+		if(root == null)
+		{
+			root = new Node(key);
+			System.out.println("New tree created with root element: "+root.val);
+		}
+		else if(key < root.val)
+		{
+			root.lchild = insertElementInTree(root.lchild, key);
+			if(heightOfTree(root.lchild)-heightOfTree(root.rchild)==2)
+				if(key<root.lchild.val)
+					root = rotateWithLeftChild(root);
+				else
+					root = doubleWithLeftChild(root);			
+		}
+		
+		else if(key > root.val)
+		{
+			root.rchild = insertElementInTree(root.rchild, key);
+			if(heightOfTree(root.rchild)-heightOfTree(root.lchild)==2)
+				if(key>root.rchild.val)
+					root = rotateWithRightChild(root);
+				else
+					root = doubleWithRightChild(root);			
+		}
+		
+		else
+			System.out.println("Duplicate entry found, ignore");
+		
+		root.height = compareChildren(heightOfTree(root.lchild), heightOfTree(root.rchild))+1;
+		
+		return root;
+	}
+	
+	//To get the height of the tree
+	int heightOfTree(Node root) {
+        if (root == null)
+            return 0;
+ 
+        return root.height;
+    }
+	
+	//Method to compare left child and right child
+	int compareChildren(int left, int right) {
+		if(left>right)
+			return left;
+		else
+			return right;
+    }
+	
+	//Rotations on left and right children to perform balancing of the tree post Insertion - AVL tree
+	Node rotateWithLeftChild(Node k2)
+	{
+		Node k1 = k2.lchild;
+		k2.lchild = k1.rchild;
+		k1.rchild = k2;
+		k2.height = compareChildren( heightOfTree( k2.lchild ), heightOfTree( k2.rchild ) ) + 1;
+        k1.height = compareChildren( heightOfTree( k1.lchild ), k2.height ) + 1;
+
+		return k1;
+	}
+	
+	Node rotateWithRightChild(Node k1)
+	{
+		Node k2 = k1.rchild;
+		k1.rchild = k2.lchild;
+		k2.lchild = k1;
+		k1.height = compareChildren( heightOfTree( k1.lchild ), heightOfTree( k1.rchild ) ) + 1;
+        k2.height = compareChildren( heightOfTree( k2.rchild ), k1.height ) + 1;
+
+		return k2;
+	}
+	
+	Node doubleWithLeftChild(Node k3)
+     {
+         k3.lchild = rotateWithRightChild( k3.lchild );
+         return rotateWithLeftChild( k3 );
+     }
+           
+     Node doubleWithRightChild(Node k1)
+     {
+         k1.rchild = rotateWithLeftChild( k1.rchild );
+         return rotateWithRightChild( k1 );
+     }  
+
+	//Deleting a node from the tree
+	void remove_R(int key)
+	{
+		if(root == null)
+			System.out.println("Tree is empty, cannot delete element.");
+		
+		else if(!search_F(key))
+			System.out.println("Element "+key+" is not present in the tree to be removed.");
+		
+		else
+		{
+			root = removeFromTree(root, key);
+		}
+	}
+	
+	Node removeFromTree(Node root, int key)
+	{
+		Node temp;
+		//When element is in the left sub tree
+		if(key < root.val)
+			root.lchild = removeFromTree(root.lchild, key);
+		
+		//When element is in the right sub tree 
+		else if(key > root.val)
+			root.rchild = removeFromTree(root.rchild, key);
+		
+		else{
+				//Node with no children
+				if(root.lchild == null && root.rchild == null)
+					return null;
+				
+				//Node with one right child
+				else if(root.lchild == null)
+				{
+					temp = root;
+					root = root.rchild;
+					return root;
+				}
+				
+				//Node with one left child
+				else if(root.rchild == null)
+				{
+					temp = root;
+					root = root.lchild;
+					return root;
+				}
+				
+				//Node with two children
+				else 
+				{
+					//Find minimum value of right subtree
+					temp = findMin(root.rchild);
+					root.val = temp.val;
+					root.rchild = removeFromTree(root.rchild, temp.val);
+				}
+			}
+			
+		return root;
+	}
+	
+	//Method to find the minimum value in the right subtree (for deletion)
+	Node findMin(Node root)
+	{
+		Node temp = root;
+		while(temp.lchild != null)
+			temp = temp.lchild;
+		
+		return temp;
+	}
+	
+	public void inorder()
+    {
+         inorderR(root);
+    }
+    void inorderR(Node r)
+    {
+         if (r != null)
+         {
+             inorderR(r.lchild);
+             System.out.println(r.val +" ");
+             inorderR(r.rchild);
+         }
+    } 
+}
+
+class ExBST {
+	public static void main(String args[]) throws Exception
+	{
+		binaryTreeFunctions tree = new binaryTreeFunctions();
+		BufferedReader br = new BufferedReader(new FileReader(args[0]));
+        String input;
+		int data,temp;
+		
+		while ((input = br.readLine()) != null)
+		{
+			if(input.charAt(0)=='I' || input.charAt(0)=='R' || input.charAt(0)=='F')
+			{
+			data = 0, temp = 0;
+				int i = 2;
+				while(i<input.length() && i<=5)
+				{
+					if(input.charAt(i)>='0' && input.charAt(i)<='9')
+					{
+						temp = input.charAt(i)-'0';
+						data = data*10+temp;
+					}
+					i++;
+				}
+			}
+			
+			char n = input.charAt(0);
+			switch(n)
+			{
+				case 'I':
+						tree.insert_I(data);
+					break;
+					
+				case 'F': 
+						if(tree.search_F(data))
+							System.out.println("Search complete, found element "+data);
+						else
+							System.out.println(-1);
+					break;
+					
+				case 'R':
+						tree.remove_R(data);
+					break;
+					
+				case 'D':
+						tree.inorder();
+					break;
+					
+				case 'E':
+						tree.reset_E();
+					break;
+			}
+		}	
+		 
+	}
+}
